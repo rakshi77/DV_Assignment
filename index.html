@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rakshith B S</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <style>
+        
+        body {
+            background-color: #759eac; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        #time {
+            position:absolute;
+            top:12px;
+            left: 12px;
+            font-family: 'Helvetica'; 
+            font-size: 12pt;
+        }
+        .legend_text {
+            font-family: 'Helvetica'; 
+            font-size: 6pt;
+        }
+    </style>
+</head>
+
+
+<body>
+    <svg width="90vw" height="700" viewBox="0 0 900 700"></svg>
+
+    <div id='timestamp'>
+    </div>
+
+    <script>
+        const dataFilePath = 'Data_CT.csv';
+        let svgContainer = d3.select("svg");
+
+        const geoPath = d3.geoPath();
+
+        function dC(dFile) {
+            d3.csv(dFile).then(function (d) {
+                let rows = 512, columns = 512;
+
+                let v = [];
+                d.forEach(function (d) {
+                    v.push(+d[0]);
+                });
+
+                const minV= d3.min(v);
+                const maxV= d3.max(v);
+
+                let cS = d3.scaleLinear()
+                    .domain(d3.range(minV, maxV, parseInt(Math.abs(maxV -minV) / 6.5)))
+                    .range(["#0d1a50", "#3e5eba","#2b83ba", "#abdda4", "#ffffbf","#fdae61","#d7191c"])
+                    .interpolate(d3.interpolateHcl);
+
+                let cL = d3.contours()
+                    .size([rows, columns])
+                    .thresholds(d3.range(minV, maxV, 6.5))
+                    (v);
+
+                svgContainer.append("g").attr("class", "contours")
+                    .selectAll("path")
+                    .data(cL)
+                    .enter()
+                    .append("path")
+                    .attr("d", function (d) { return geoPath(d) })
+                    .attr("stroke", "black")
+                    .attr("stroke-width", ".1px")
+                    .attr("stroke-linejoin", "round")
+                    .attr("fill", function (d) { return cS(d.value) });
+            });
+        }
+        dC(dataFilePath);
+    </script>
+</body>
+</html>
